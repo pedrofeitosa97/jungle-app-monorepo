@@ -6,7 +6,7 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - VITE_API_URL=http://localhost:3001/api
+      - VITE_API_URL=http://api-gateway:3001/api
     networks:
       - forum-network
 
@@ -31,6 +31,8 @@ services:
     depends_on:
       - rabbitmq
       - db
+    env_file:
+      - ./apps/auth-service/.env
     networks:
       - forum-network
 
@@ -63,8 +65,8 @@ services:
     container_name: db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: forum_main
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: jungle-db
     ports:
       - '5432:5432'
     volumes:
