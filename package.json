@@ -1,9 +1,9 @@
 {
   "name": "jungle-challenge",
   "private": true,
-  "packageManager": "pnpm@8.13.0", 
+  "packageManager": "pnpm@8.13.0",
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "lint": "turbo run lint"
   },

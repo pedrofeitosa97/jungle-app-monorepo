@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   web:
     build:
@@ -35,10 +34,10 @@ services:
     networks:
       - forum-network
 
-  tasks-service:
+  posts-service:
     build:
       context: .
-      dockerfile: ./apps/tasks-service/Dockerfile
+      dockerfile: ./apps/posts-service/Dockerfile
     ports:
       - '3003:3003'
     depends_on:
