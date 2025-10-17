@@ -1,0 +1,96 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    networks:
+      - forum-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./apps/api-gateway/Dockerfile
+    ports:
+      - '3001:3001'
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - forum-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./apps/auth-service/Dockerfile
+    ports:
+      - '3002:3002'
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - forum-network
+
+  tasks-service:
+    build:
+      context: .
+      dockerfile: ./apps/tasks-service/Dockerfile
+    ports:
+      - '3003:3003'
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - forum-network
+
+  notifications-service:
+    build:
+      context: .
+      dockerfile: ./apps/notifications-service/Dockerfile
+    ports:
+      - '3004:3004'
+    depends_on:
+      - rabbitmq
+      - db
+    networks:
+      - forum-network
+
+  db:
+    image: postgres:17.5-alpine3.21
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: forum_main
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - forum-network
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    networks:
+      - forum-network
+
+networks:
+  forum-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  rabbit_data:
