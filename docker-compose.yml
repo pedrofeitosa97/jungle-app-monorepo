@@ -36,10 +36,10 @@ services:
     networks:
       - forum-network
 
-  posts-service:
+  notifications-service:
     build:
       context: .
-      dockerfile: ./apps/posts-service/Dockerfile
+      dockerfile: ./apps/notifications-service/Dockerfile
     ports:
       - '3003:3003'
     depends_on:
@@ -47,11 +47,10 @@ services:
       - db
     networks:
       - forum-network
-
-  notifications-service:
+  posts-service:
     build:
       context: .
-      dockerfile: ./apps/notifications-service/Dockerfile
+      dockerfile: ./apps/posts-service/Dockerfile
     ports:
       - '3004:3004'
     depends_on:
@@ -59,7 +58,6 @@ services:
       - db
     networks:
       - forum-network
-
   db:
     image: postgres:17.5-alpine3.21
     container_name: db
