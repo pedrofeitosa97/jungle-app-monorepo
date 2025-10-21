@@ -18,4 +18,7 @@ export class Post {
 
   @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
   comments: Comment[];
+
+  @Column({ default: 0 })
+  likes: number;
 }
