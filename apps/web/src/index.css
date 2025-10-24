@@ -21,8 +21,4 @@
     --accent: 142 71% 45%;
     --muted: 240 5% 64%;
   }
-
-  body {
-    @apply bg-background text-foreground;
-  }
 }
