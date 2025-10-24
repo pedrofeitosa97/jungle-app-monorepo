@@ -49,4 +49,14 @@ export class NotificationsConsumer {
     console.log('post.deleted recebido:', msg);
     this.gateway.sendToAll('postDeleted', msg);
   }
+
+  @RabbitSubscribe({
+    exchange: 'posts',
+    routingKey: 'post.unliked',
+    queue: 'notifications_post_unliked',
+  })
+  handlePostUnliked(msg: { authorId: string; [key: string]: any }) {
+    console.log('post.unliked recebido:', msg);
+    this.gateway.sendToUser(msg.authorId, 'postUnliked', msg);
+  }
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { usePosts } from '../hooks/usePosts'
 import { PostCard } from '../components/PostCard'
 import { useAuthStore } from '../../../store/auth'
+import { motion } from 'framer-motion'
 
 export default function Feed() {
   const { userId } = useAuthStore()
@@ -12,7 +13,16 @@ export default function Feed() {
   if (posts.isLoading) return <div>Carregando...</div>
 
   return (
-    <div className="space-y-6 text-white">
+    <div className="space-y-6">
+      <motion.h1
+        className="text-3xl font-semibold text-center mb-4 text-white"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        🌿 Bem-vindo ao Jungle Feed
+      </motion.h1>
+
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -25,21 +35,18 @@ export default function Feed() {
       >
         <h2 className="font-semibold">Novo post</h2>
         <input
-          className="w-full px-3 py-2 rounded-md bg-black/40 border border-neutral-700 text-white"
+          className="w-full px-3 py-2 rounded-md bg-black/40 border border-neutral-700"
           placeholder="Título"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
-          className="w-full px-3 py-2 rounded-md bg-black/40 border border-neutral-700 text-white"
+          className="w-full px-3 py-2 rounded-md bg-black/40 border border-neutral-700"
           placeholder="Conteúdo"
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-        <button
-          type="submit"
-          className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white"
-        >
+        <button className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition">
           Publicar
         </button>
       </form>

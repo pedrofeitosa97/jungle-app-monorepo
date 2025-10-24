@@ -21,13 +21,11 @@ export class PostsService {
   ): Promise<Post> {
     const post = this.postRepository.create({ authorId, title, content });
     const saved = await this.postRepository.save(post);
-
     await this.amqpConnection.publish('posts', 'post.created', {
       postId: saved.id,
       authorId,
       title,
     });
-
     return saved;
   }
 
@@ -35,15 +33,28 @@ export class PostsService {
     const post = await this.postRepository.findOne({ where: { id: postId } });
     if (!post) throw new NotFoundException('Post not found');
 
-    post.likes = (post.likes || 0) + 1;
+    const likedUsers = post.likedUsers ? [...post.likedUsers] : [];
+    const alreadyLiked = likedUsers.includes(userId);
+
+    if (alreadyLiked) {
+      post.likes = Math.max(0, post.likes - 1);
+      post.likedUsers = likedUsers.filter((u) => u !== userId);
+      await this.amqpConnection.publish('posts', 'post.unliked', {
+        postId,
+        unlikedBy: userId,
+        authorId: post.authorId,
+      });
+    } else {
+      post.likes = (post.likes || 0) + 1;
+      post.likedUsers = [...likedUsers, userId];
+      await this.amqpConnection.publish('posts', 'post.liked', {
+        postId,
+        likedBy: userId,
+        authorId: post.authorId,
+      });
+    }
+
     await this.postRepository.save(post);
-
-    await this.amqpConnection.publish('posts', 'post.liked', {
-      postId,
-      likedBy: userId,
-      authorId: post.authorId,
-    });
-
     return post;
   }
 
@@ -70,7 +81,6 @@ export class PostsService {
   async deletePost(id: string): Promise<void> {
     const post = await this.postRepository.findOne({ where: { id } });
     if (!post) throw new NotFoundException('Post not found');
-
     await this.postRepository.remove(post);
     await this.amqpConnection.publish('posts', 'post.deleted', { postId: id });
   }
