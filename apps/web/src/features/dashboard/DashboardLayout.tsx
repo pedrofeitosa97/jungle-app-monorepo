@@ -1,17 +1,13 @@
 import { Outlet } from '@tanstack/react-router'
 import { Sidebar } from './components/Sidebar'
-import { NotificationPanel } from '../../components/NotificationPanel'
 
 export default function DashboardLayout() {
   return (
-    <div className="min-h-screen">
+    <div className="flex h-screen w-full bg-neutral-950 text-white overflow-hidden">
       <Sidebar />
-      <div className="pl-16 md:pl-56 pr-80">
-        <div className="max-w-3xl mx-auto py-8">
-          <Outlet />
-        </div>
-      </div>
-      <NotificationPanel />
+      <main className="flex-1 ml-16 transition-all duration-300 p-6">
+        <Outlet />
+      </main>
     </div>
   )
 }

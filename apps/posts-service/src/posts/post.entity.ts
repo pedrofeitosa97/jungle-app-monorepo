@@ -1,4 +1,3 @@
-// post.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Comment } from './comment.entity';
 

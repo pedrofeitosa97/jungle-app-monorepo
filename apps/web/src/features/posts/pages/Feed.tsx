@@ -12,7 +12,7 @@ export default function Feed() {
   if (posts.isLoading) return <div>Carregando...</div>
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white">
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -21,22 +21,25 @@ export default function Feed() {
           setTitle('')
           setContent('')
         }}
-        className="bg-[var(--color-bg-soft)] border border-neutral-800 rounded-xl p-4 space-y-2"
+        className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-2"
       >
         <h2 className="font-semibold">Novo post</h2>
         <input
-          className="w-full px-3 py-2 rounded-md bg-black/40 border border-neutral-700"
+          className="w-full px-3 py-2 rounded-md bg-black/40 border border-neutral-700 text-white"
           placeholder="Título"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
-          className="w-full px-3 py-2 rounded-md bg-black/40 border border-neutral-700"
+          className="w-full px-3 py-2 rounded-md bg-black/40 border border-neutral-700 text-white"
           placeholder="Conteúdo"
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-        <button className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20">
+        <button
+          type="submit"
+          className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white"
+        >
           Publicar
         </button>
       </form>

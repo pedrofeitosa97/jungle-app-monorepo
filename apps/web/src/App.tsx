@@ -6,12 +6,20 @@ import { useSocket } from './hooks/socket.hook'
 
 const client = new QueryClient()
 
-export default function App() {
+function AppContent() {
   useSocket()
   return (
-    <QueryClientProvider client={client}>
+    <>
       <RouterProvider router={router} />
       <NotificationToast />
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={client}>
+      <AppContent />
     </QueryClientProvider>
   )
 }

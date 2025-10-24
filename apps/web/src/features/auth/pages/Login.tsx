@@ -11,20 +11,19 @@ export default function Login() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const { data } = await authApi.post<{ access_token: string }>(
-      '/auth/login',
-      { email, password }
-    )
-    // Se seu login retorna também userId, capture aqui
-    setAuth(data.access_token, email)
+    const { data } = await authApi.post<{
+      access_token: string
+      userId: string
+    }>('/auth/login', { email, password })
+    setAuth(data.access_token, data.userId, email)
     nav({ to: '/' })
   }
 
   return (
-    <div className="min-h-screen grid place-items-center">
+    <div className="min-h-screen grid place-items-center bg-neutral-950 text-white">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-sm bg-[var(--color-bg-soft)] p-6 rounded-xl border border-neutral-800 space-y-4"
+        className="w-full max-w-sm bg-neutral-900 p-6 rounded-xl border border-neutral-800 space-y-4"
       >
         <h1 className="text-xl font-semibold">Entrar</h1>
         <input
@@ -40,7 +39,10 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20">
+        <button
+          type="submit"
+          className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20"
+        >
           Entrar
         </button>
         <button
