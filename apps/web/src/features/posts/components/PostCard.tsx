@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Heart, Trash2, MessageCircle } from 'lucide-react'
 import type { Post } from '../../../utils/types'
-import { toast } from 'sonner'
 
 export function PostCard({
   post,
@@ -9,29 +8,45 @@ export function PostCard({
   onDelete,
   onComment,
   canDelete,
+  currentUserId,
 }: {
   post: Post
   onLike: (id: string) => void
   onDelete: (id: string) => void
   onComment: (id: string, text: string) => void
   canDelete: boolean
+  currentUserId: string
 }) {
-  const [liked, setLiked] = useState(post.likedByMe ?? false)
+  console.log('Rendering PostCard for post:', post)
+  const initiallyLiked = useMemo(
+    () =>
+      Boolean(post.likedByMe) ||
+      (post.likedUsers?.includes(currentUserId) ?? false),
+    [post.likedByMe, post.likedUsers, currentUserId]
+  )
+  const [liked, setLiked] = useState(initiallyLiked)
   const [likes, setLikes] = useState(post.likes)
   const [comment, setComment] = useState('')
 
+  useEffect(() => {
+    setLiked(initiallyLiked)
+    setLikes(post.likes)
+  }, [initiallyLiked, post.likes, post.id])
+
   function toggleLike() {
-    setLiked(!liked)
-    setLikes((prev) => (liked ? prev - 1 : prev + 1))
+    setLiked((prev) => !prev)
+    setLikes((prev) => (liked ? Math.max(0, prev - 1) : prev + 1))
     onLike(post.id)
   }
 
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 space-y-3">
       <div className="flex justify-between items-start">
-        <div>
-          <h3 className="font-semibold text-white">{post.title}</h3>
-          <p className="text-sm text-neutral-400">{post.content}</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h3 className="font-semibold text-white">{post.title}</h3>
+            <p className="text-sm text-neutral-400">{post.content}</p>
+          </div>
         </div>
         {canDelete && (
           <button
@@ -46,9 +61,7 @@ export function PostCard({
       <div className="flex items-center gap-4 text-sm text-neutral-400">
         <button
           onClick={toggleLike}
-          className={`flex items-center gap-1 transition ${
-            liked ? 'text-red-500' : 'hover:text-red-400'
-          }`}
+          className={`flex items-center gap-1 transition ${liked ? 'text-red-500' : 'hover:text-red-400'}`}
         >
           <Heart
             size={18}
@@ -68,11 +81,9 @@ export function PostCard({
         />
         <button
           onClick={() => {
-            if (comment.trim()) {
-              onComment(post.id, comment)
-              toast(`Novo comentário adicionado!`, {
-                description: comment,
-              })
+            const text = comment.trim()
+            if (text) {
+              onComment(post.id, text)
               setComment('')
             }
           }}
@@ -81,6 +92,16 @@ export function PostCard({
           <MessageCircle size={18} />
         </button>
       </div>
+
+      {post.comments?.length ? (
+        <div className="mt-3 space-y-2 border-t border-neutral-800 pt-2 max-h-40 overflow-y-auto scrollarea">
+          {post.comments.map((c) => (
+            <div key={c.id} className="flex items-start gap-2">
+              <p className="text-sm text-neutral-400 flex-1">💬 {c.content}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

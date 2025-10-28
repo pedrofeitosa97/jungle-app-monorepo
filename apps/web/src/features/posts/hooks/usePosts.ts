@@ -1,62 +1,61 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { postsApi } from '../../../api/http'
 import type { Post } from '../../../utils/types'
 
 export function usePosts() {
-  const queryClient = useQueryClient()
+  const qc = useQueryClient()
 
   const posts = useQuery({
     queryKey: ['posts'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Post[]> => {
       const { data } = await postsApi.get<Post[]>('/posts')
       return data
     },
   })
 
   const mCreate = useMutation({
-    mutationFn: async (newPost: {
+    mutationFn: async (input: {
       authorId: string
       title: string
       content: string
     }) => {
-      const { data } = await postsApi.post('/posts', newPost)
+      const { data } = await postsApi.post<Post>('/posts', input)
       return data
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
   })
 
   const mLike = useMutation({
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
-      const { data } = await postsApi.post(`/posts/${id}/like`, { userId })
+      const { data } = await postsApi.post<Post>(`/posts/${id}/like`, {
+        userId,
+      })
       return data
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
   })
 
   const mComment = useMutation({
-    mutationFn: async ({
-      id,
-      authorId,
-      content,
-    }: {
+    mutationFn: async (input: {
       id: string
       authorId: string
       content: string
     }) => {
-      const { data } = await postsApi.post(`/posts/${id}/comments`, {
-        authorId,
-        content,
+      const { data } = await postsApi.post(`/posts/${input.id}/comments`, {
+        authorId: input.authorId,
+        content: input.content,
       })
       return data
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
   })
 
   const mDelete = useMutation({
     mutationFn: async (id: string) => {
       await postsApi.delete(`/posts/${id}`)
+      return true
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['posts'] }),
   })
 
   return { posts, mCreate, mLike, mComment, mDelete }

@@ -1,4 +1,3 @@
-// auth.controller.ts
 import {
   Body,
   Controller,
@@ -18,14 +17,15 @@ export class AuthController {
   async register(@Body() registerDto: RegisterDto) {
     const existingUser = await this.authService.findByEmail(registerDto.email);
     if (existingUser) {
-      throw new HttpException('Email already in use', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Email já está em uso', HttpStatus.BAD_REQUEST);
     }
+
     const existingUsername = await this.authService.findByUsername(
       registerDto.username,
     );
     if (existingUsername) {
       throw new HttpException(
-        'Username already in use',
+        'Nome de usuário já está em uso',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -40,7 +40,7 @@ export class AuthController {
     } catch (error) {
       console.error(error);
       throw new HttpException(
-        'Failed to register user',
+        'Erro ao registrar usuário',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -48,11 +48,10 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    const token = await this.authService.login(loginDto);
-    console.log(token, 'token');
-    if (!token) {
-      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    const result = await this.authService.login(loginDto);
+    if (!result) {
+      throw new HttpException('Credenciais inválidas', HttpStatus.UNAUTHORIZED);
     }
-    return { access_token: token };
+    return result;
   }
 }

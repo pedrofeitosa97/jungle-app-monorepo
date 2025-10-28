@@ -19,43 +19,68 @@ export class PostsService {
     title: string,
     content: string,
   ): Promise<Post> {
-    const post = this.postRepository.create({ authorId, title, content });
-    const saved = await this.postRepository.save(post);
+    const post: Post = this.postRepository.create({
+      authorId,
+      title,
+      content,
+      likedUsers: [],
+    });
+
+    const saved: Post = await this.postRepository.save(post);
+    const postId = saved.id;
+
     await this.amqpConnection.publish('posts', 'post.created', {
-      postId: saved.id,
+      postId,
       authorId,
       title,
     });
-    return saved;
+
+    await this.amqpConnection.publish('posts', 'post.updated', {
+      postId,
+      reason: 'post.created',
+    });
+
+    return this.findPostById(postId);
   }
 
   async likePost(postId: string, userId: string): Promise<Post> {
     const post = await this.postRepository.findOne({ where: { id: postId } });
     if (!post) throw new NotFoundException('Post not found');
 
-    const likedUsers = post.likedUsers ? [...post.likedUsers] : [];
-    const alreadyLiked = likedUsers.includes(userId);
+    post.likedUsers = post.likedUsers || [];
+    const hasLiked = post.likedUsers.includes(userId);
 
-    if (alreadyLiked) {
+    if (hasLiked) {
       post.likes = Math.max(0, post.likes - 1);
-      post.likedUsers = likedUsers.filter((u) => u !== userId);
+      post.likedUsers = post.likedUsers.filter((u) => u !== userId);
+      await this.postRepository.save(post);
+
       await this.amqpConnection.publish('posts', 'post.unliked', {
         postId,
         unlikedBy: userId,
         authorId: post.authorId,
       });
+      await this.amqpConnection.publish('posts', 'post.updated', {
+        postId,
+        reason: 'post.unliked',
+      });
     } else {
-      post.likes = (post.likes || 0) + 1;
-      post.likedUsers = [...likedUsers, userId];
+      post.likes++;
+      post.likedUsers.push(userId);
+      await this.postRepository.save(post);
+
       await this.amqpConnection.publish('posts', 'post.liked', {
         postId,
         likedBy: userId,
         authorId: post.authorId,
       });
+      await this.amqpConnection.publish('posts', 'post.updated', {
+        postId,
+        reason: 'post.liked',
+      });
     }
 
-    await this.postRepository.save(post);
-    return post;
+    return this.findPostById(postId);
   }
 
   async addComment(
@@ -66,13 +91,25 @@ export class PostsService {
     const post = await this.postRepository.findOne({ where: { id: postId } });
     if (!post) throw new NotFoundException('Post not found');
 
-    const comment = this.commentRepository.create({ post, authorId, content });
-    const saved = await this.commentRepository.save(comment);
+    const comment: Comment = this.commentRepository.create({
+      post,
+      authorId,
+      content,
+      likedUsers: [],
+    });
+
+    const saved: Comment = await this.commentRepository.save(comment);
 
     await this.amqpConnection.publish('posts', 'comment.added', {
       postId,
+      postAuthorId: post.authorId,
       authorId,
       content,
+    });
+
+    await this.amqpConnection.publish('posts', 'post.updated', {
+      postId,
+      reason: 'comment.added',
     });
 
     return saved;
@@ -81,12 +118,21 @@ export class PostsService {
   async deletePost(id: string): Promise<void> {
     const post = await this.postRepository.findOne({ where: { id } });
     if (!post) throw new NotFoundException('Post not found');
+
     await this.postRepository.remove(post);
     await this.amqpConnection.publish('posts', 'post.deleted', { postId: id });
+    await this.amqpConnection.publish('posts', 'post.updated', {
+      postId: id,
+      reason: 'post.deleted',
+    });
   }
 
   async listPosts(): Promise<Post[]> {
-    return this.postRepository.find({ relations: ['comments'] });
+    const posts = await this.postRepository.find({
+      relations: ['comments'],
+      order: { createdAt: 'DESC' },
+    });
+    return posts.map((p) => ({ ...p, likedUsers: p.likedUsers || [] }));
   }
 
   async findPostById(id: string): Promise<Post> {
@@ -95,6 +141,6 @@ export class PostsService {
       relations: ['comments'],
     });
     if (!post) throw new NotFoundException(`Post with id ${id} not found`);
-    return post;
+    return { ...post, likedUsers: post.likedUsers || [] };
   }
 }

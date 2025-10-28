@@ -30,3 +30,26 @@ html, body, #root {
   background: var(--color-border);
   border-radius: 10px;
 }
+
+.scrollarea {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+
+.scrollarea::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollarea::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 999px;
+}
+
+.scrollarea::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}

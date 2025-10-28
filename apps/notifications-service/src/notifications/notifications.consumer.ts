@@ -12,8 +12,8 @@ export class NotificationsConsumer {
     queue: 'notifications_post_created',
   })
   handlePostCreated(msg: { title: string; authorId: string; postId: string }) {
-    console.log('post.created recebido:', msg);
     this.gateway.sendToAll('postCreated', msg);
+    this.gateway.sendToAll('posts.refresh', { postId: msg.postId });
   }
 
   @RabbitSubscribe({
@@ -22,8 +22,22 @@ export class NotificationsConsumer {
     queue: 'notifications_post_liked',
   })
   handlePostLiked(msg: { authorId: string; likedBy: string; postId: string }) {
-    console.log('post.liked recebido:', msg);
     this.gateway.sendToUser(msg.authorId, 'postLiked', msg);
+    this.gateway.sendToAll('posts.refresh', { postId: msg.postId });
+  }
+
+  @RabbitSubscribe({
+    exchange: 'posts',
+    routingKey: 'post.unliked',
+    queue: 'notifications_post_unliked',
+  })
+  handlePostUnliked(msg: {
+    authorId: string;
+    unlikedBy: string;
+    postId: string;
+  }) {
+    this.gateway.sendToUser(msg.authorId, 'postUnliked', msg);
+    this.gateway.sendToAll('posts.refresh', { postId: msg.postId });
   }
 
   @RabbitSubscribe({
@@ -33,11 +47,12 @@ export class NotificationsConsumer {
   })
   handleCommentAdded(msg: {
     postId: string;
+    postAuthorId: string;
     authorId: string;
     content: string;
   }) {
-    console.log('comment.added recebido:', msg);
-    this.gateway.sendToUser(msg.authorId, 'comment_added', msg);
+    this.gateway.sendToUser(msg.postAuthorId, 'comment.added', msg);
+    this.gateway.sendToAll('posts.refresh', { postId: msg.postId });
   }
 
   @RabbitSubscribe({
@@ -46,17 +61,16 @@ export class NotificationsConsumer {
     queue: 'notifications_post_deleted',
   })
   handlePostDeleted(msg: { postId: string }) {
-    console.log('post.deleted recebido:', msg);
     this.gateway.sendToAll('postDeleted', msg);
+    this.gateway.sendToAll('posts.refresh', { postId: msg.postId });
   }
 
   @RabbitSubscribe({
     exchange: 'posts',
-    routingKey: 'post.unliked',
-    queue: 'notifications_post_unliked',
+    routingKey: 'post.updated',
+    queue: 'notifications_post_updated',
   })
-  handlePostUnliked(msg: { authorId: string; [key: string]: any }) {
-    console.log('post.unliked recebido:', msg);
-    this.gateway.sendToUser(msg.authorId, 'postUnliked', msg);
+  handlePostUpdated(msg: { postId: string; reason: string }) {
+    this.gateway.sendToAll('posts.refresh', { postId: msg.postId });
   }
 }

@@ -18,13 +18,13 @@ export class AuthService {
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
   }
+
   async findByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { username } });
   }
 
   async register(registerDto: RegisterDto): Promise<User> {
     const { username, email, password } = registerDto;
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.usersRepository.create({
@@ -46,12 +46,12 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
+  async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
     const user = await this.validateUser(email, password);
 
     if (!user) {
-      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('Credenciais inválidas', HttpStatus.UNAUTHORIZED);
     }
 
     const payload = {
@@ -61,6 +61,13 @@ export class AuthService {
     };
     const token = this.jwtService.sign(payload);
 
-    return { access_token: token };
+    return {
+      access_token: token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      },
+    };
   }
 }

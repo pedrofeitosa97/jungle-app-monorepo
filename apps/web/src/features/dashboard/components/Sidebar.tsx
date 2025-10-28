@@ -14,7 +14,7 @@ export function Sidebar() {
     const handleResize = () => {
       const mobile = window.innerWidth < 768
       setIsMobile(mobile)
-      setOpen(!mobile) // Sidebar aberta no desktop
+      setOpen(!mobile)
     }
     handleResize()
     window.addEventListener('resize', handleResize)

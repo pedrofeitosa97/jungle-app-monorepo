@@ -45,7 +45,7 @@ export function NotificationPanel() {
         <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-700">
           {items.map((n, i) => (
             <div
-              key={n.id || i} // 🔥 garante que cada item tenha uma key única
+              key={n.id || i}
               className="flex justify-between items-start bg-neutral-800 rounded-lg px-3 py-2 hover:bg-neutral-700 transition"
             >
               <div>
