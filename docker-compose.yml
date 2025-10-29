@@ -6,9 +6,13 @@ services:
     ports:
       - '3000:3000'
     environment:
-      # Ajuste para o endpoint correto da sua API/Gateway
-      - VITE_API_URL=http://localhost:3002/api
-    # Opcional: se quiser que o web espere os backends subirem
+      - VITE_API_URL=http://auth-service:3002/api
+      - HOST=0.0.0.0
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
     depends_on:
       auth-service:
         condition: service_started
@@ -19,6 +23,7 @@ services:
     restart: unless-stopped
     networks:
       - forum-network
+
 
   auth-service:
     build:
@@ -58,6 +63,8 @@ services:
       dockerfile: ./apps/posts-service/Dockerfile
     ports:
       - '3004:3004'
+    env_file:
+      - ./apps/posts-service/.env  
     depends_on:
       db:
         condition: service_healthy

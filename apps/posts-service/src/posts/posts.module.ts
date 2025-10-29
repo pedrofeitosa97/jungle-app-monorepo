@@ -12,8 +12,8 @@ import { Comment } from './comment.entity';
     RabbitMQModule.forRootAsync(RabbitMQModule, {
       useFactory: () => ({
         exchanges: [{ name: 'posts', type: 'topic' }],
-        uri: process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672',
-        connectionInitOptions: { wait: true },
+        uri: process.env.RABBITMQ_URL || 'amqp://admin:admin@rabbitmq:5672',
+        connectionInitOptions: { wait: true, timeout: 15000 },
       }),
     }),
   ],
