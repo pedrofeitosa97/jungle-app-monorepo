@@ -20,218 +20,206 @@ Cada serviço roda de forma **independente**, porém se comunica via **mensageri
 
 ---
 
-## 🧩 Arquitetura
+## ⚙️ Tecnologias Utilizadas
 
-### 🧱 Estrutura Monorepo
-
-```
-jungle-app-monorepo/
-│
-├── apps/
-│   ├── auth-service/           # Serviço de autenticação
-│   ├── posts-service/          # Serviço de posts e comentários
-│   ├── notifications-service/  # WebSockets e alertas
-│   └── web/                    # Frontend (Vite + React)
-│
-├── package.json                # Scripts e dependências globais
-├── pnpm-lock.yaml              # Lockfile do pnpm
-├── turbo.json                  # Configuração do Turborepo
-└── docker-compose.yml          # Orquestração de containers
-```
-
-### ⚙️ Padrões de Arquitetura
-- **Monorepo:** gerenciado com [Turborepo](https://turbo.build/repo)
-- **Back-end:** [NestJS](https://nestjs.com/)
-- **Front-end:** [React + Vite](https://vitejs.dev/)
-- **Mensageria:** [RabbitMQ](https://www.rabbitmq.com/)
-- **Banco de dados:** [PostgreSQL](https://www.postgresql.org/)
-- **ORM:** [TypeORM](https://typeorm.io/)
-- **Gerenciador de pacotes:** [pnpm](https://pnpm.io/)
-- **Comunicação:** via filas (event-driven) e HTTP local entre serviços
-- **Notificações:** via Socket.IO (tempo real)
+- **NestJS** — Framework Node.js modular e escalável
+- **React + Vite** — Frontend moderno e rápido
+- **TypeORM + PostgreSQL** — ORM e banco relacional
+- **RabbitMQ** — Comunicação assíncrona entre microserviços
+- **Socket.IO** — Notificações em tempo real
+- **Turborepo + pnpm** — Estrutura monorepo e gerenciamento de pacotes
+- **Docker Compose** — Orquestração dos serviços
 
 ---
 
-## 🧠 Serviços
+## 🧠 Serviços e Rotas
 
-### 🔐 Auth Service
-Gerencia autenticação e registro de usuários.  
-Principais recursos:
-- Registro e login de usuários
-- Hash seguro de senhas (bcrypt)
-- Geração e validação de tokens JWT
-- Validação em middlewares nos demais serviços
+### 🔐 Auth Service (`:3002`)
 
-**Stack:**  
-NestJS, TypeORM, PostgreSQL, JWT, bcrypt.
+Responsável por autenticação e registro de usuários.
 
----
+#### **Rotas**
+| Método | Endpoint | Descrição |
+|---------|-----------|-----------|
+| `POST` | `/auth/register` | Cria um novo usuário |
+| `POST` | `/auth/login` | Retorna token JWT para autenticação |
+| `GET` | `/auth/verify` | Valida token JWT |
 
-### 📰 Posts Service
-Gerencia **posts, curtidas e comentários**.  
-Cada post contém autor, título, conteúdo e reações em tempo real.
-
-Principais funcionalidades:
-- CRUD completo de posts
-- Sistema de likes/unlikes
-- Comentários integrados
-- Emissão de eventos RabbitMQ para notificações
-- Atualização em tempo real via WebSocket (através do `notifications-service`)
-
-**Stack:**  
-NestJS, TypeORM, PostgreSQL, RabbitMQ.
-
----
-
-### 🔔 Notifications Service
-Responsável por notificações **em tempo real**, usando **WebSockets (Socket.IO)**.  
-Recebe eventos do RabbitMQ e os distribui aos usuários conectados.
-
-Funções principais:
-- Receber eventos (`post.created`, `post.liked`, `comment.added`)
-- Emitir notificações para todos ou usuários específicos
-- Manter conexões de WebSocket autenticadas
-
-**Stack:**  
-NestJS, Socket.IO, RabbitMQ.
-
----
-
-### 💻 Web (Frontend)
-Interface construída com **React + Vite + TypeScript**.
-
-Principais recursos:
-- Login e registro de usuários (JWT)
-- Exibição de posts, likes e comentários
-- WebSocket em tempo real para notificações
-- Cache e sincronização via **React Query**
-- Estado global via **Zustand**
-
-**Stack:**
-- React 18
-- Vite
-- Zustand
-- React Query
-- Axios
-- TailwindCSS
-- Socket.IO Client
-
----
-
-## 🧰 Principais Dependências
-
-| Tipo | Biblioteca | Uso |
-|------|-------------|-----|
-| Backend | `@nestjs/core`, `@nestjs/typeorm`, `@nestjs/websockets`, `@nestjs/microservices` | Estrutura e comunicação |
-| Banco | `pg`, `typeorm` | Integração com PostgreSQL |
-| Segurança | `bcrypt`, `jsonwebtoken`, `passport` | Autenticação e segurança |
-| Frontend | `react`, `vite`, `@tanstack/react-query`, `zustand` | Interface e cache |
-| Realtime | `socket.io`, `socket.io-client` | Notificações em tempo real |
-| DevOps | `docker`, `turborepo`, `pnpm` | Orquestração e build |
-
----
-
-## 🐳 Docker Compose
-
-O projeto inclui um `docker-compose.yml` com os serviços:
-- `auth-service`
-- `posts-service`
-- `notifications-service`
-- `web`
-- `db` (PostgreSQL)
-- `rabbitmq`
-
-### Subir tudo:
+#### **Exemplo de Login**
 ```bash
-docker compose up --build
+POST http://localhost:3002/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario@email.com",
+  "password": "123456"
+}
+```
+**Retorno:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "7bc8e113-18e7-4397-a36e-a3b8773e73b8",
+    "email": "usuario@email.com",
+    "name": "Pedro"
+  }
+}
 ```
 
-### Verificar status:
+---
+
+### 📰 Posts Service (`:3004`)
+
+Gerencia **posts**, **curtidas** e **comentários**.
+
+#### **Rotas de Post**
+
+| Método | Endpoint | Descrição |
+|---------|-----------|-----------|
+| `GET` | `/posts` | Lista todos os posts |
+| `GET` | `/posts?postid={id}` | Retorna um post pelo ID |
+| `POST` | `/posts` | Cria um novo post |
+| `DELETE` | `/posts/{postId}` | Deleta um post existente |
+| `POST` | `/posts/{postId}/like` | Adiciona ou remove curtida no post |
+
+#### **Exemplo: Criar Post**
 ```bash
-docker compose ps
+POST http://localhost:3004/posts
+Content-Type: application/json
+
+{
+  "authorId": "7bc8e113-18e7-4397-a36e-a3b8773e73b8",
+  "title": "Meu primeiro post",
+  "content": "Olá comunidade!"
+}
+```
+**Retorno:**
+```json
+{
+  "id": "14990ba6-9494-4c6d-b1c1-6827c53cbbf2",
+  "title": "Meu primeiro post",
+  "content": "Olá comunidade!",
+  "authorId": "7bc8e113-18e7-4397-a36e-a3b8773e73b8",
+  "likes": 0,
+  "comments": [],
+  "createdAt": "2025-10-28T20:15:13.000Z"
+}
 ```
 
-### Encerrar containers:
+#### **Exemplo: Buscar Post por ID**
 ```bash
-docker compose down -v
+GET http://localhost:3004/posts?postid=14990ba6-9494-4c6d-b1c1-6827c53cbbf2
+```
+**Retorno:**
+```json
+{
+  "id": "14990ba6-9494-4c6d-b1c1-6827c53cbbf2",
+  "title": "Meu primeiro post",
+  "content": "Olá comunidade!",
+  "authorId": "7bc8e113-18e7-4397-a36e-a3b8773e73b8",
+  "likes": 2,
+  "likedUsers": ["user123", "user456"],
+  "comments": [
+    {
+      "id": "82cc7817-23cb-41e2-9e2e-bd3b857d5ed2",
+      "content": "Muito bom!",
+      "authorId": "e91b6a3d-77d9-4d0b-8c1b-9fcb1f2043f2"
+    }
+  ],
+  "createdAt": "2025-10-28T20:15:13.000Z"
+}
+```
+
+#### **Exemplo: Curtir Post**
+```bash
+POST http://localhost:3004/posts/f20b49b2-3355-4761-9148-c51dd9be946b/like
+```
+**Retorno:**
+```json
+{
+  "message": "Post curtido com sucesso",
+  "postId": "f20b49b2-3355-4761-9148-c51dd9be946b",
+  "likes": 3
+}
+```
+
+#### **Exemplo: Deletar Post**
+```bash
+DELETE http://localhost:3004/posts/8331e527-f8f6-4880-8bea-b4f9efc4a5b7
+```
+**Retorno:**
+```json
+{
+  "message": "Post deletado com sucesso",
+  "postId": "8331e527-f8f6-4880-8bea-b4f9efc4a5b7"
+}
 ```
 
 ---
 
-## 🧪 Execução Local (sem Docker)
+### 💬 Rotas de Comentários
 
-> É possível rodar os serviços manualmente durante o desenvolvimento.
+| Método | Endpoint | Descrição |
+|---------|-----------|-----------|
+| `POST` | `/posts/{postId}/comments` | Cria novo comentário no post especificado |
 
-1. Crie o banco via Docker:
-   ```bash
-   docker run --name jungle-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=jungle-db -p 5432:5432 -d postgres:17-alpine
-   ```
+#### **Exemplo: Criar Comentário**
+```bash
+POST http://localhost:3004/posts/14990ba6-9494-4c6d-b1c1-6827c53cbbf2/comments
+Content-Type: application/json
 
-2. Configure o `.env` em cada app:
-   ```
-   DATABASE_URL=postgresql://postgres:postgres@localhost:5432/jungle-db
-   RABBITMQ_URL=amqp://admin:admin@localhost:5672
-   JWT_SECRET=supersecret
-   ```
-
-3. Rode cada app em modo watch:
-   ```bash
-   pnpm --filter auth-service dev
-   pnpm --filter posts-service dev
-   pnpm --filter notifications-service dev
-   pnpm --filter web dev
-   ```
-
----
-
-## 🧩 Comunicação entre Serviços
-
-Os microserviços comunicam-se de forma **assíncrona via RabbitMQ**, trocando eventos:
-- `post.created` → notifica usuários
-- `post.liked` → envia alerta ao autor
-- `comment.added` → notifica o autor do post
-
-E de forma **direta (HTTP)** apenas para autenticação e validação de usuários (`/auth/verify`).
+{
+  "authorId": "e91b6a3d-77d9-4d0b-8c1b-9fcb1f2043f2",
+  "content": "Excelente post!"
+}
+```
+**Retorno:**
+```json
+{
+  "id": "0f24b69a-30ad-4cf8-a5b8-d8cf037a3a7a",
+  "content": "Excelente post!",
+  "authorId": "e91b6a3d-77d9-4d0b-8c1b-9fcb1f2043f2",
+  "postId": "14990ba6-9494-4c6d-b1c1-6827c53cbbf2",
+  "createdAt": "2025-10-28T20:20:10.000Z"
+}
+```
 
 ---
 
-## 🔄 Fluxo de Realtime (Notificações)
+### 🔔 Notifications Service (`:3003`)
 
-1. O usuário A cria um post → `posts-service` envia evento `post.created` via RabbitMQ.  
-2. O `notifications-service` escuta o evento → emite via WebSocket para todos.  
-3. O `web` (React) recebe o evento e atualiza a lista de posts com `React Query`.
+Gerencia **notificações em tempo real** via WebSocket.
 
-Mesmo fluxo ocorre para curtidas (`post.liked`) e comentários (`comment.added`).
+#### **Eventos WebSocket**
+| Evento | Descrição |
+|---------|------------|
+| `postCreated` | Novo post criado |
+| `postLiked` | Post curtido |
+| `postUnliked` | Curtida removida |
+| `comment.added` | Novo comentário |
+| `posts.refresh` | Atualiza feed de posts |
+
+**Exemplo (cliente WebSocket):**
+```js
+socket.on("postLiked", (data) => {
+  console.log("❤️ Post curtido:", data);
+});
+```
 
 ---
 
-## 🧱 Boas Práticas Implementadas
-
-- ✅ **Clean Architecture** com separação entre camadas (`controllers`, `services`, `repositories`)
-- ✅ **Princípio SOLID** aplicado em serviços
-- ✅ **DTOs e validações** com `class-validator` e `class-transformer`
-- ✅ **Env variables seguras** via `.env`
-- ✅ **Padronização com ESLint + Prettier**
-- ✅ **Observabilidade** via logs em todos os eventos críticos
-
----
-
-## 🧾 Scripts úteis
-
-| Comando | Descrição |
-|----------|------------|
-| `pnpm dev` | Mensagem de aviso para rodar os apps isolados |
-| `pnpm --filter auth-service dev` | Inicia o Auth Service |
-| `pnpm --filter posts-service dev` | Inicia o Posts Service |
-| `pnpm --filter notifications-service dev` | Inicia o Notifications Service |
-| `pnpm --filter web dev` | Inicia o Frontend |
-| `docker compose up --build` | Sobe todos os containers |
-| `docker compose down -v` | Remove containers e volumes |
+## 🧱 Boas Práticas
+- Clean Architecture (controllers, services, repositories)
+- Princípios SOLID
+- DTOs com validação (`class-validator`)
+- `.env` isolado por serviço
+- ESLint e Prettier padronizados
+- Logs estruturados para auditoria
 
 ---
 
 ## 🧑‍💻 Autor
-
 **Pedro — Desenvolvedor Full Stack**  
 - ⚙️ Foco em arquitetura de microsserviços  
 - 🧠 Experiência com NestJS, React e Docker  
