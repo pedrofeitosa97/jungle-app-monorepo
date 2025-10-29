@@ -32,6 +32,22 @@ Antes de rodar o projeto, certifique-se de ter instalado:
 
 ---
 
+## ⚙️ Instalação do PNPM
+
+O **pnpm** é utilizado como gerenciador de pacotes em todo o projeto.  
+Se você ainda não o possui instalado, execute:
+
+```bash
+npm install -g pnpm
+```
+
+Verifique a instalação:
+```bash
+pnpm -v
+```
+
+---
+
 ## ⚙️ Configuração Inicial
 
 ### 1️⃣ Clonar o Repositório
@@ -40,12 +56,23 @@ git clone https://github.com/seuusuario/jungle-app-monorepo.git
 cd jungle-app-monorepo
 ```
 
-### 2️⃣ Instalar Dependências
+### 2️⃣ Instalar Dependências Globais
+Na raiz do projeto:
 ```bash
 pnpm install
 ```
 
-### 3️⃣ Configurar Variáveis de Ambiente
+### 3️⃣ Instalar Dependências em Cada Microserviço
+Cada serviço possui suas dependências locais. Execute dentro de cada pasta:
+
+```bash
+cd apps/auth-service && pnpm install
+cd ../posts-service && pnpm install
+cd ../notifications-service && pnpm install
+cd ../web && pnpm install
+```
+
+### 4️⃣ Configurar Variáveis de Ambiente
 Cada serviço em `/apps` possui seu próprio arquivo `.env`.
 
 #### Exemplo — `apps/auth-service/.env`
@@ -206,7 +233,7 @@ socket.on("user.registered", (data) => {
 ---
 
 ## 🧱 Boas Práticas
-- Clean Architecture (controllers, services, repositories)
+- Clean Architecture (controllers, services)
 - Princípios SOLID
 - DTOs com validação (`class-validator`)
 - `.env` isolado por serviço
