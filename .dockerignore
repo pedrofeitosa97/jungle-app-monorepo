@@ -1,0 +1,12 @@
+.git
+node_modules
+**/node_modules
+dist
+build
+.tmp
+.cache
+.next
+out
+.vscode
+.DS_Store
+pnpm-debug.log
