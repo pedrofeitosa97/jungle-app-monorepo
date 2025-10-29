@@ -52,7 +52,7 @@ pnpm -v
 
 ### 1️⃣ Clonar o Repositório
 ```bash
-git clone https://github.com/seuusuario/jungle-app-monorepo.git
+git clone https://github.com/pedrofeitosa97/jungle-app-monorepo.git
 cd jungle-app-monorepo
 ```
 
