@@ -23,17 +23,15 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Botão hambúrguer (só mobile) */}
       {isMobile && (
         <button
           onClick={() => setOpen((prev) => !prev)}
-          className="fixed top-4 left-4 p-2 rounded-md text-white border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 transition-all duration-200 md:hidden"
+          className="fixed top-4 left-4 p-2 rounded-md text-white border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 transition-all duration-200 md:hidden z-50"
         >
           <Menu size={22} />
         </button>
       )}
 
-      {/* Sidebar */}
       <AnimatePresence initial={false}>
         {(open || !isMobile) && (
           <motion.aside
@@ -42,11 +40,10 @@ export function Sidebar() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: isMobile ? -260 : 0, opacity: 0 }}
             transition={{ type: 'tween', duration: 0.25 }}
-            className={`fixed left-0 top-0 h-full bg-neutral-950 border-r border-neutral-800 text-white flex flex-col justify-between transition-all duration-300 ${
+            className={`fixed left-0 top-0 h-full bg-neutral-950 border-r border-neutral-800 text-white flex flex-col justify-between transition-all duration-300 z-50 ${
               open ? 'w-56' : 'w-16'
             }`}
           >
-            {/* Itens */}
             <div className="flex flex-col mt-6 gap-2">
               <Link
                 to="/"
@@ -58,7 +55,6 @@ export function Sidebar() {
               </Link>
             </div>
 
-            {/* Rodapé */}
             <div className="mb-6 flex flex-col items-start px-4 gap-3">
               {open && email && (
                 <motion.p
@@ -84,7 +80,6 @@ export function Sidebar() {
         )}
       </AnimatePresence>
 
-      {/* Overlay — fecha o menu ao clicar fora */}
       {isMobile && open && (
         <motion.div
           onClick={() => setOpen(false)}
@@ -92,7 +87,7 @@ export function Sidebar() {
           animate={{ opacity: 0.4 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-black backdrop-blur-sm md:hidden"
+          className="fixed inset-0 bg-black backdrop-blur-sm md:hidden z-40"
         />
       )}
     </>
